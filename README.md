@@ -251,3 +251,12 @@ cp -r content-creator-pipeline/ ~/.hermes/skills/creative/
 ## License
 
 MIT · [github.com/SamuelKwj/content-creator-pipeline](https://github.com/SamuelKwj/content-creator-pipeline)
+
+---
+
+## 作者
+
+Created by **请叫我奉孝大人**
+
+- GitHub: [@SamuelKwj](https://github.com/SamuelKwj)
+- 抖音: `52168570433`
