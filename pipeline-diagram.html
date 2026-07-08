@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Creator Pipeline — 内容创作全流程</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: linear-gradient(135deg, #0a0a12 0%, #0f0f1e 50%, #0a0a12 100%);
+    color: #e2e8f0;
+    font-family: 'Noto Sans SC', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px;
+  }
+  
+  .diagram {
+    max-width: 1300px;
+    width: 100%;
+  }
+  
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .header h1 {
+    font-size: 32px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #a78bfa 0%, #22d3ee 40%, #34d399 70%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 3px;
+  }
+  
+  .header .subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 2px;
+  }
+  
+  .header .badge-row {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .badge-ver  { background: rgba(167, 139, 250, 0.15); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.3); }
+  .badge-num  { background: rgba(34, 211, 238, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
+  .badge-mit  { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+  
+  /* ====== MAIN PIPELINE ====== */
+  .pipeline-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  
+  .stage-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Stage card */
+  .stage-card {
+    width: 140px;
+    padding: 20px 14px 16px;
+    border-radius: 14px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.25s, box-shadow 0.25s;
+    cursor: default;
+    backdrop-filter: blur(10px);
+  }
+  
+  .stage-card:hover {
+    transform: translateY(-4px);
+    z-index: 10;
+  }
+  
+  .stage-emoji {
+    font-size: 30px;
+    margin-bottom: 8px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+  
+  .stage-name {
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  
+  .stage-label {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  
+  /* Stage theme colors */
+  .st-spark  { background: linear-gradient(180deg, rgba(34,211,238,0.15) 0%, rgba(34,211,238,0.05) 100%); border: 1.5px solid rgba(34,211,238,0.4); }
+  .st-spark:hover  { box-shadow: 0 8px 30px rgba(34,211,238,0.2); }
+  .st-spark .stage-name { color: #22d3ee; }
+  .st-spark .stage-label { color: #67e8f9; }
+  
+  .st-seed   { background: linear-gradient(180deg, rgba(52,211,153,0.15) 0%, rgba(52,211,153,0.05) 100%); border: 1.5px solid rgba(52,211,153,0.4); }
+  .st-seed:hover   { box-shadow: 0 8px 30px rgba(52,211,153,0.2); }
+  .st-seed .stage-name { color: #34d399; }
+  .st-seed .stage-label { color: #6ee7b7; }
+  
+  .st-score  { background: linear-gradient(180deg, rgba(167,139,250,0.15) 0%, rgba(167,139,250,0.05) 100%); border: 1.5px solid rgba(167,139,250,0.4); }
+  .st-score:hover  { box-shadow: 0 8px 30px rgba(167,139,250,0.2); }
+  .st-score .stage-name { color: #a78bfa; }
+  .st-score .stage-label { color: #c4b5fd; }
+  
+  .st-predict { background: linear-gradient(180deg, rgba(251,191,36,0.15) 0%, rgba(251,191,36,0.05) 100%); border: 1.5px solid rgba(251,191,36,0.4); }
+  .st-predict:hover { box-shadow: 0 8px 30px rgba(251,191,36,0.2); }
+  .st-predict .stage-name { color: #fbbf24; }
+  .st-predict .stage-label { color: #fcd34d; }
+  
+  .st-shoot  { background: linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(251,146,60,0.05) 100%); border: 1.5px solid rgba(251,146,60,0.4); }
+  .st-shoot:hover  { box-shadow: 0 8px 30px rgba(251,146,60,0.2); }
+  .st-shoot .stage-name { color: #fb923c; }
+  .st-shoot .stage-label { color: #fdba74; }
+  
+  .st-publish { background: linear-gradient(180deg, rgba(244,114,182,0.15) 0%, rgba(244,114,182,0.05) 100%); border: 1.5px solid rgba(244,114,182,0.4); }
+  .st-publish:hover { box-shadow: 0 8px 30px rgba(244,114,182,0.2); }
+  .st-publish .stage-name { color: #f472b6; }
+  .st-publish .stage-label { color: #f9a8d4; }
+  
+  /* Arrow between stages */
+  .arrow-h {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    margin-top: 30px;
+    z-index: 0;
+  }
+  
+  .arrow-h svg {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .arrow-h line, .arrow-h polyline, .arrow-h path {
+    stroke: #475569;
+    stroke-width: 1.8;
+  }
+  
+  /* Sub items */
+  .sub-items {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 12px;
+  }
+  
+  .sub-drop {
+    width: 1.5px;
+    height: 14px;
+    background: linear-gradient(180deg, rgba(148,163,184,0.4), rgba(148,163,184,0.1));
+  }
+  
+  .sub-card {
+    padding: 9px 14px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(15, 23, 42, 0.8);
+    min-width: 115px;
+    margin-top: 5px;
+    backdrop-filter: blur(6px);
+  }
+  
+  .sub-card .sub-name {
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #cbd5e1;
+  }
+  
+  .sub-card .sub-desc {
+    font-size: 9px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  
+  .sub-card-highlight {
+    border-color: rgba(251, 191, 36, 0.3);
+    background: rgba(251, 191, 36, 0.06);
+  }
+  
+  /* ====== LOOPBACK SECTION ====== */
+  .loop-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin: 8px 0 24px;
+    position: relative;
+  }
+  
+  .loop-arrow-left {
+    display: flex;
+    align-items: center;
+    color: #475569;
+    font-size: 20px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .loop-arrow-left svg {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .retro-card {
+    padding: 16px 22px;
+    border-radius: 12px;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0.04) 100%);
+    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .retro-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px rgba(56,189,248,0.15);
+  }
+  
+  .retro-card .re-name {
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #38bdf8;
+  }
+  
+  .retro-card .re-emoji {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  
+  .retro-card .re-desc {
+    font-size: 10px;
+    color: #7dd3fc;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  
+  .calibrate-block {
+    padding: 16px 22px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(167,139,250,0.12) 0%, rgba(167,139,250,0.04) 100%);
+    border: 1.5px solid rgba(167, 139, 250, 0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .calibrate-block:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px rgba(167,139,250,0.15);
+  }
+  
+  .calibrate-block .ca-header {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  
+  .calibrate-block .ca-name {
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #a78bfa;
+  }
+  
+  .calibrate-block .ca-emoji {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  
+  .calibrate-block .ca-desc {
+    font-size: 10px;
+    color: #c4b5fd;
+    margin-top: 2px;
+  }
+  
+  .ca-subs {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .ca-sub {
+    padding: 9px 13px;
+    border-radius: 8px;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    font-size: 10px;
+    backdrop-filter: blur(6px);
+  }
+  
+  .ca-sub .cs-name {
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #cbd5e1;
+  }
+  
+  .ca-sub .cs-desc {
+    font-size: 9px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  
+  /* Circular feedback arrows */
+  .feedback-loop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0 0;
+    gap: 30px;
+    position: relative;
+  }
+  
+  .feedback-arrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .feedback-arrow svg {
+    width: 40px;
+    height: 24px;
+  }
+  
+  /* Phase labels */
+  .phases {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 32px;
+    padding: 20px 40px 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.08);
+  }
+  
+  .phase {
+    text-align: center;
+    font-size: 12px;
+    color: #475569;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+  }
+  
+  .phase .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: middle;
+  }
+  
+  .dot-cyan { background: #22d3ee; box-shadow: 0 0 8px rgba(34,211,238,0.5); }
+  .dot-emerald { background: #34d399; box-shadow: 0 0 8px rgba(52,211,153,0.5); }
+  .dot-violet { background: #a78bfa; box-shadow: 0 0 8px rgba(167,139,250,0.5); }
+  .dot-amber { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.5); }
+  .dot-sky { background: #38bdf8; box-shadow: 0 0 8px rgba(56,189,248,0.5); }
+  
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 10px;
+    color: #334155;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="diagram">
+  
+  <!-- Header -->
+  <div class="header">
+    <h1>Content Creator Pipeline</h1>
+    <div class="subtitle">内容创作者全流程工作流 · 灵感 → 发布 → 复盘 → 进化</div>
+    <div class="badge-row">
+      <span class="badge badge-ver">v1.7.0</span>
+      <span class="badge badge-num">19 SKILLS</span>
+      <span class="badge badge-mit">MIT</span>
+    </div>
+  </div>
+  
+  <!-- ====== MAIN PIPELINE ====== -->
+  <div class="pipeline-row">
+    
+    <!-- SPARK -->
+    <div class="stage-group">
+      <div class="stage-card st-spark">
+        <div class="stage-emoji">💡</div>
+        <div class="stage-name">SPARK</div>
+        <div class="stage-label">灵感固化</div>
+      </div>
+      <div class="sub-items">
+        <div class="sub-drop"></div>
+        <div class="sub-card">
+          <div class="sub-name">☰ INBOX</div>
+          <div class="sub-desc">选题候选池</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="arrow-h">
+      <svg viewBox="0 0 28 28"><polyline points="8,6 18,14 8,22" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    
+    <!-- SEED -->
+    <div class="stage-group">
+      <div class="stage-card st-seed">
+        <div class="stage-emoji">✍️</div>
+        <div class="stage-name">SEED</div>
+        <div class="stage-label">深挖写稿</div>
+      </div>
+      <div class="sub-items">
+        <div class="sub-drop"></div>
+        <div class="sub-card">
+          <div class="sub-name">◌ humanizer</div>
+          <div class="sub-desc">去 AI 味润色</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="arrow-h">
+      <svg viewBox="0 0 28 28"><polyline points="8,6 18,14 8,22" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    
+    <!-- SCORE -->
+    <div class="stage-group">
+      <div class="stage-card st-score">
+        <div class="stage-emoji">🎯</div>
+        <div class="stage-name">SCORE</div>
+        <div class="stage-label">盲打评分</div>
+      </div>
+      <div class="sub-items">
+        <div class="sub-drop"></div>
+        <div class="sub-card">
+          <div class="sub-name">⊙ blind</div>
+          <div class="sub-desc">隔离 sub-agent</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-name">◈ dbs-hook</div>
+          <div class="sub-desc">开头钩子优化</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="arrow-h">
+      <svg viewBox="0 0 28 28"><polyline points="8,6 18,14 8,22" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    
+    <!-- PREDICT -->
+    <div class="stage-group">
+      <div class="stage-card st-predict">
+        <div class="stage-emoji">🔮</div>
+        <div class="stage-name">PREDICT</div>
+        <div class="stage-label">预测落盘</div>
+      </div>
+    </div>
+    
+    <div class="arrow-h">
+      <svg viewBox="0 0 28 28"><polyline points="8,6 18,14 8,22" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    
+    <!-- SHOOT -->
+    <div class="stage-group">
+      <div class="stage-card st-shoot">
+        <div class="stage-emoji">🎬</div>
+        <div class="stage-name">SHOOT</div>
+        <div class="stage-label">拍摄登记</div>
+      </div>
+    </div>
+    
+    <div class="arrow-h">
+      <svg viewBox="0 0 28 28"><polyline points="8,6 18,14 8,22" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    
+    <!-- PUBLISH -->
+    <div class="stage-group">
+      <div class="stage-card st-publish">
+        <div class="stage-emoji">🚀</div>
+        <div class="stage-name">PUBLISH</div>
+        <div class="stage-label">发布登记</div>
+      </div>
+      <div class="sub-items">
+        <div class="sub-drop"></div>
+        <div class="sub-card sub-card-highlight">
+          <div class="sub-name"># hashtag</div>
+          <div class="sub-desc">抖音话题推荐</div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- ====== FEEDBACK LOOP ====== -->
+  <div class="loop-section">
+    
+    <div class="retro-card">
+      <div class="re-emoji">📊</div>
+      <div class="re-name">RETRO</div>
+      <div class="re-desc">T+N 数据复盘</div>
+      <div class="re-desc">预测 vs 实绩对比</div>
+    </div>
+    
+    <!-- Arrow from RETRO to CALIBRATE -->
+    <div class="loop-arrow-left">
+      <svg viewBox="0 0 32 28"><polyline points="8,6 18,14 8,22" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    
+    <div class="calibrate-block">
+      <div class="ca-header">
+        <div class="ca-emoji">🔄</div>
+        <div class="ca-name">CALIBRATE</div>
+        <div class="ca-desc">校准升级循环</div>
+      </div>
+      <div class="ca-subs">
+        <div class="ca-sub">
+          <div class="cs-name">cheat-bump</div>
+          <div class="cs-desc">rubric 升级</div>
+        </div>
+        <div class="ca-sub">
+          <div class="cs-name">persona</div>
+          <div class="cs-desc">受众画像</div>
+        </div>
+        <div class="ca-sub">
+          <div class="cs-name">recommend</div>
+          <div class="cs-desc">选题推荐</div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- Feedback loop back to start -->
+  <div class="feedback-loop">
+    <div class="feedback-arrow">
+      <span style="color:#64748b;">校准数据反馈</span>
+      <svg viewBox="0 0 80 24">
+        <path d="M 0 12 Q 20 12 20 12 Q 40 -4 80 12" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <polyline points="72,7 80,12 72,17" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span style="color:#64748b;">驱动下一篇内容</span>
+    </div>
+  </div>
+  
+  <!-- Phase labels -->
+  <div class="phases">
+    <div class="phase"><span class="dot dot-cyan"></span>灵感采集</div>
+    <div class="phase"><span class="dot dot-emerald"></span>创作生产</div>
+    <div class="phase"><span class="dot dot-violet"></span>评估打分</div>
+    <div class="phase"><span class="dot dot-amber"></span>预测发布</div>
+    <div class="phase"><span class="dot dot-sky"></span>复盘校准</div>
+  </div>
+  
+  <div class="footer">SamuelKwj/content-creator-pipeline-for-douyin · 请叫我奉孝大人</div>
+  
+</div>
+</body>
+</html>
